@@ -37,6 +37,9 @@
                 php bin/console make:migration
                 php bin/console doctrine:migrations:migrate
 
+## Usage
+
+    DOC .wsdl http://wsdl.doc/soapServer.wsdl
 
 ## Raise project with symfony server
 
