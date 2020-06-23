@@ -3,10 +3,13 @@
 namespace App\Entity;
 
 use App\Repository\CustomerRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
  * @ORM\Entity(repositoryClass=CustomerRepository::class)
+ * @ORM\HasLifecycleCallbacks()
  */
 class Customer
 {
@@ -16,6 +19,16 @@ class Customer
      * @ORM\Column(type="bigint")
      */
     private $id;
+
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
+    private $email;
+
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
+    private $password;
 
     /**
      * @ORM\Column(type="bigint")
@@ -38,11 +51,6 @@ class Customer
     private $phone;
 
     /**
-     * @ORM\Column(type="string", length=255)
-     */
-    private $email;
-
-    /**
      * @ORM\Column(type="float", nullable=true)
      */
     private $balance;
@@ -50,16 +58,56 @@ class Customer
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $token;
+    private $token_email;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $session_id;
 
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
+    
+    private $creation_date;
+
+    /**
+     * @ORM\OneToMany(targetEntity=Token::class, mappedBy="customer")
+     */
+    private $tokens;
+
+    public function __construct()
+    {
+        $this->tokens = new ArrayCollection();
+    }
+
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function getEmail(): ?string
+    {
+        return $this->email;
+    }
+
+    public function setEmail(string $email): self
+    {
+        $this->email = $email;
+
+        return $this;
+    }
+
+    public function getPassword(): ?string
+    {
+        return $this->password;
+    }
+
+    public function setPassword(string $password): self
+    {
+        $this->password = $password;
+
+        return $this;
     }
 
     public function getDni(): ?int
@@ -110,18 +158,6 @@ class Customer
         return $this;
     }
 
-    public function getEmail(): ?string
-    {
-        return $this->email;
-    }
-
-    public function setEmail(string $email): self
-    {
-        $this->email = $email;
-
-        return $this;
-    }
-
     public function getBalance(): ?float
     {
         return $this->balance;
@@ -134,14 +170,14 @@ class Customer
         return $this;
     }
 
-    public function getToken(): ?string
+    public function getTokenEmail(): ?string
     {
-        return $this->token;
+        return $this->token_email;
     }
 
-    public function setToken(?string $token): self
+    public function setTokenEmail(?string $token_email): self
     {
-        $this->token = $token;
+        $this->token_email = $token_email;
 
         return $this;
     }
@@ -156,5 +192,57 @@ class Customer
         $this->session_id = $session_id;
 
         return $this;
+    }
+
+    public function getCreationDate(): ?string
+    {
+        return $this->creation_date;
+    }
+
+    public function setCreationDate(?string $creation_date): self
+    {
+        $this->creation_date = $creation_date;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Token[]
+     */
+    public function getTokens(): Collection
+    {
+        return $this->tokens;
+    }
+
+    public function addToken(Token $token): self
+    {
+        if (!$this->tokens->contains($token)) {
+            $this->tokens[] = $token;
+            $token->setCustomer($this);
+        }
+
+        return $this;
+    }
+
+    public function removeToken(Token $token): self
+    {
+        if ($this->tokens->contains($token)) {
+            $this->tokens->removeElement($token);
+            // set the owning side to null (unless already changed)
+            if ($token->getCustomer() === $this) {
+                $token->setCustomer(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @ORM\PrePersist
+     */
+    public function setCreationDatePersist()
+    {
+        $date = new \DateTime("now", new \DateTimeZone('America/Caracas') );
+        $this->creation_date = $date->format('Y-m-d H:i:s');
     }
 }
